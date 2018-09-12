@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Key</title>
+
+<!--Bootstrap4-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+
+<!--web3js-->
+<script src="https://github.com/ethereum/web3.js/blob/develop/dist/web3.min.js"></script>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+    }
+
+    div{
+        text-align: center;
+    }
+
+    #main_div{
+        height:100vh;
+        width: 100%;
+    }
+
+    #nav{
+        width: inherit;
+        height: 10%;
+    }
+
+    #status_console{
+        text-align:center;
+        width: inherit;
+        height: 90%;
+    }
+
+    #img_div{
+        height: 70%;
+    }
+
+    #btn_div{
+        height: 30%;
+    }
+
+    img{
+        height:50%;
+        margin-top: 15vh;
+        min-height:170px;
+    }
+</style>
+<script>
+    var ABI = [
+   {
+      "constant": false,
+      "inputs": [
+         {
+            "name": "_to",
+            "type": "address"
+         },
+         {
+            "name": "ans",
+            "type": "bool"
+         }
+      ],
+      "name": "response",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "constant": false,
+      "inputs": [],
+      "name": "request",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "constant": false,
+      "inputs": [],
+      "name": "confirm",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "constant": true,
+      "inputs": [],
+      "name": "getRequestStatus",
+      "outputs": [
+         {
+            "name": "",
+            "type": "bool"
+         }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "constant": true,
+      "inputs": [],
+      "name": "getResponseStatus",
+      "outputs": [
+         {
+            "name": "",
+            "type": "bool"
+         }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "constant": true,
+      "inputs": [],
+      "name": "getOwner",
+      "outputs": [
+         {
+            "name": "",
+            "type": "address"
+         }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "constant": true,
+      "inputs": [],
+      "name": "getRequester",
+      "outputs": [
+         {
+            "name": "",
+            "type": "address"
+         }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "constant": true,
+      "inputs": [],
+      "name": "getResponseCheck",
+      "outputs": [
+         {
+            "name": "",
+            "type": "bool"
+         }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+   },
+   {
+      "constant": false,
+      "inputs": [],
+      "name": "openDoor",
+      "outputs": [
+         {
+            "name": "",
+            "type": "bool"
+         }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+   },
+   {
+      "inputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "name": "_sender",
+            "type": "address"
+         },
+         {
+            "indexed": false,
+            "name": "_res",
+            "type": "bool"
+         }
+      ],
+      "name": "OpeningDoor",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "name": "_from",
+            "type": "address"
+         },
+         {
+            "indexed": false,
+            "name": "_to",
+            "type": "address"
+         },
+         {
+            "indexed": false,
+            "name": "_res",
+            "type": "bool"
+         }
+      ],
+      "name": "Requested",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "name": "_from",
+            "type": "address"
+         },
+         {
+            "indexed": false,
+            "name": "_to",
+            "type": "address"
+         }
+      ],
+      "name": "Responded",
+      "type": "event"
+   },
+   {
+      "anonymous": false,
+      "inputs": [
+         {
+            "indexed": false,
+            "name": "_sender",
+            "type": "address"
+         }
+      ],
+      "name": "Confirmed",
+      "type": "event"
+   }
+]
+
+    var address = '0xec262321b7400b2bcc47ad88c0819225688b9da4'
+    var myAddress = ''
+
+    var contract = web3.eth.contract(ABI).at(address)
+    var requester = '';
+    var owner = '';
+
+    $(document).ready(function(){
+        if( typeof web3 !== 'undefined')
+        {
+            <!--현재 이더리움 네트워크에 연결된 커넥션 정보-->
+            web3 = new Web3(web3.currentProvider)
+            myAddress = web3.eth.accounts[0];
+        }
+        else{
+            alert('metamask를 준비하세요.')
+            alert('없으면 수동으로 이더리움넷에 접속합니다.')
+            web3 = new Web3(Web3.providers.HttpProvider('이더리움 넷 주소'))
+        }
+
+        init_all();
+    })
+
+    function getOwner(){
+        contract.getOwner(function(err,res){
+            owner = res;
+
+            <!-- 키를 가지고 있는지 없는지를 확인하여 구분-->
+            if(myAddress != owner){
+                if(requester != 0x0){
+                    $('#btn_div').html('<div><button id="request_btn" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#myModal" disabled>REQUEST KEY</button></div><p>Request is processing</p>')
+                }else{
+                    $('#btn_div').html('<button id="request_btn" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#myModal">REQUEST KEY</button>')
+                }
+            }else{
+                $('#btn_div').html('<button id="open_btn" class="btn btn-success btn-lg" data-toggle="modal" data-target="#myModal">OPEN DOOR</button>')
+            }
+
+            $('#open_btn').click(function(){
+                reset_modal()
+                console.log('===== Open_btn Clicked =====')
+                contract.openDoor(function(err,res){
+                        $('.modal-body').text('The door is opening...')
+                })
+            })
+
+            $('#request_btn').click(function(){
+                reset_modal()
+                console.log('===== Request_btn Clicked =====')
+                contract.request(function(err,res){
+                     $('.modal-body').text('Requesting...')
+                     $('#btn_div').html('<div><button id="request_btn" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#myModal" disabled>REQUEST KEY</button></div><p>Request is processing</p>')
+                })
+            })
+        })
+    }
+
+    <!--요청자가 누구인지 가져오는 함수-->
+    function getRequester(){
+        contract.getRequester(function(err,res){
+            requester = res;
+            console.log('===== Get Requester =====')
+            console.log('Requester : ' + res)
+        })
+    }
+
+    <!--응답 상태를 가져오고, 응답의 수락/거절 상태를 가져오는 함수-->
+    function getResponseStatus(){
+        contract.getResponseStatus(function(err,res){
+            reset_modal()
+            if(res){
+                $('#myModal').modal('show')
+                $('.modal-header').html('<button type="button" class="close">&times;</button>')
+                contract.getResponseCheck(function(error,result){
+                    if(result){
+                        $('.modal-body').text('Congrats! You have got the Key!')
+                        $('.modal-footer').html('<button id="confirm_btn" type="button" class="btn btn-success">Confirm</button>')
+                    }else{
+                        $('.modal-body').text('Sorry, your request is rejected :P')
+                        $('.modal-footer').html('<button id="confirm_btn" type="button" class="btn btn-success">Confirm</button>')
+                    }
+                    $('#confirm_btn').click(function(){
+                        console.log('===== Confirm_btn Clicked =====')
+                        reset_modal()
+                        contract.confirm(function(err,res){
+                             $('.modal-body').text('Processing...')
+                        })
+                    })
+
+
+                })
+            }
+            console.log('===== Get Response =====')
+        })
+    }
+
+    <!--요청 상태를 가져와서 요청 확인 후, 응답의 modal을 띄워주는 함수-->
+    function getRequestStatus(){
+        contract.getRequestStatus(function(err,res){
+            reset_modal()
+            if(res){
+                $('#myModal').modal('show')
+                $('.modal-body').text('Someone needs your key  :)')
+                $('.modal-footer').html('<button id="accept_btn" type="button" class="btn btn-success">Accept</button><button id="reject_btn" type="button" class="btn btn-danger" data-dismiss="modal">Reject</button>')
+                $('.modal-header').html('<p class="modal-title"></p><button type="button" class="close">&times;</button>')
+                setTimeout(function(){
+                    $('.modal-title').text('From : ' + requester)
+                },500)
+
+
+                $('#accept_btn').click(function(){
+                    console.log('===== Accept_btn Clicked =====')
+                    reset_modal()
+                    contract.response(requester, true, function(err,res){
+                        $('.modal-body').text('Responding...')
+                    })
+                })
+
+                $('#reject_btn').click(function(){
+                    console.log('===== Reject_btn Clicked =====')
+                    reset_modal()
+                    contract.response(requester, false, function(err,res){
+                         $('.modal-body').text('Responding...')
+                    })
+                })
+            }
+            console.log('===== Get Requests =====')
+        })
+    }
+
+    <!--각 이벤트들을 정리해놓은 함수-->
+    function init_events(){
+
+        contract.Responded().watch(function(err, res){
+            reset_modal()
+            if(res.args._from == myAddress){
+                $('#myModal').modal('show')
+                $('.modal-body').text('Successfully responded!')
+                $('.modal-footer').html('<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>')
+                $('.modal-header').html('<button type="button" class="close" data-dismiss="modal">&times;</button>')
+            }
+            if(res.args._to == myAddress){
+                getResponseStatus();
+            }
+        })
+
+        contract.Requested().watch(function(err,res){
+            reset_modal()
+            if(res.args._from == myAddress){
+                $('#myModal').modal('show')
+                if(res.args._res){
+                    $('.modal-body').text('Successfully requested!')
+                } else{
+                    $('.modal-body').text('Request failed...')
+                }
+                $('.modal-footer').html('<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>')
+                $('.modal-header').html('<button type="button" class="close" data-dismiss="modal">&times;</button>')
+            }
+            if(res.args._to == myAddress){
+                getRequestStatus();
+            }
+        })
+
+        contract.OpeningDoor().watch(function(err, res){
+            reset_modal()
+            if(res.args._sender == myAddress){
+                $('#myModal').modal('show')
+                if(res.args._res){
+                    $('.modal-body').text('OPENED')
+                } else{
+                    $('.modal-body').text('Please check your key...')
+                }
+                $('.modal-footer').html('<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>')
+                $('.modal-header').html('<button type="button" class="close" data-dismiss="modal">&times;</button>')
+            }
+        })
+
+        contract.Confirmed().watch(function(err, res){
+            reset_modal()
+            if(res.args._sender == myAddress){
+                $('#myModal').modal('show')
+                $('.modal-body').text('Successfully Confirmed!')
+                $('.modal-footer').html('<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>')
+                $('.modal-header').html('<button type="button" class="close" data-dismiss="modal">&times;</button>')
+            }
+        })
+    }
+
+    <!--모달의 초기화 함수-->
+    function reset_modal(){
+        getRequester();
+        getOwner();
+        $('.modal-header').html('')
+        $('.modal-title').html('')
+        $('.modal-body').html('')
+        $('.modal-footer').html('')
+    }
+
+    <!--초기 화면 띄어주는 함수-->
+    function init_all() {
+        getOwner();
+        getRequester();
+        getRequestStatus();
+        getResponseStatus();
+        init_events();
+    }
+
+</script>
+</head>
+<body>
+    <div class ="container" id="main_div">
+        <div id="nav">
+            <br>
+            <h1>KEEP YOUR KEY SAFE</h1>
+            <hr>
+        </div>
+        <div id="status_console">
+            <div id="img_div">
+                <br>
+                <img src="{{ url_for('static', filename='resources/key.png') }}">
+            </div>
+            <div id="btn_div">
+
+            </div>
+        </div>
+    </div>
+
+<!-- The Modal -->
+<div class="modal fade" id="myModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title"></h4>
+
+            </div>
+
+            <!-- Modal body -->
+            <h1 class="modal-body">
+            </h1>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>
