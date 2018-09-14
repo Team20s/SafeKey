@@ -25,7 +25,7 @@ dAPP을 사용하는 모든 유저에게는 단 1개의 유니크한 열쇠가 �
 * Server : Ethereum Ropsten Test Network
 * OS : Windows 10
 
-# #화면캡쳐
+## 화면캡쳐
 #### 메인 및 트랙잭션
 <img width="33%" src="img/OWNER.png">
 <img width="33%" src="img/REQUESTER.png">
